@@ -96,41 +96,15 @@ void printFirst(vector<vector<int64_t>> first)
 	}
 }
 
-int runProg(int numLinks) {
-	vector<string> lines = readFile("aoc.txt");
-
-	vector<vector<int64_t>> sizes;
-	vector<vector<int>> coords;
+int64_t makeLinks(vector<vector<int64_t>> sizes, vector<vector<int>> coords, int numLinks)
+{
 	vector<vector<bool>> linked;
-	linked.resize(lines.size(), vector<bool>(lines.size(), false));
-	for (auto i : lines)
-	{
-		coords.push_back(splitStringI(i,','));
-	}
-	for (int i = 0; i < lines.size(); i++)
-	{
-		for (int j = i + 1; j < lines.size(); j++)
-		{
-			int64_t x = calcDist(coords[i],coords[j]);
-			sizes.push_back({ x, i, j });
-		}
-	}
-	//printFirst(sizes);
-	sort(sizes.begin(), sizes.end(), [](const std::vector<int64_t>& a, const std::vector<int64_t>& b) {return a[0] < b[0]; });
-
-	int64_t l = sizes[6303][1];
-	int64_t m = sizes[6303][2]; 
-	int64_t prod = coords[l][0] * coords[m][0];
-	cout << coords[l][0] << endl;
-	cout << coords[m][0] << endl;
-	cout << prod << endl;
-
+	linked.resize(coords.size(), vector<bool>(coords.size(), false));
 	for (int i = 0; i < numLinks; i++)
 	{
 		linked[sizes[i][1]][sizes[i][2]] = true;
 		linked[sizes[i][2]][sizes[i][1]] = true;
 	}
-	//print(linked);
 	vector<set<int>> circuits;
 
 	for (int i = 0; i < coords.size(); i++)
@@ -150,7 +124,6 @@ int runProg(int numLinks) {
 		prev = circuits;
 		makeUnique(circuits);
 	}
-	//print(circuits);
 	int64_t total = 1;
 	vector<int> circuitSizes;
 	for (auto i : circuits)
@@ -161,35 +134,60 @@ int runProg(int numLinks) {
 	int numCircuits = circuits.size();
 	if (numCircuits > 2)
 	{
-		
+
 		total = circuitSizes[numCircuits - 1] * circuitSizes[numCircuits - 2] * circuitSizes[numCircuits - 3];
-		cout << total << endl;
+		return total;
 	}
 	else
 	{
 		return circuitSizes[numCircuits - 1];
 	}
-	
-
 }
+
 
 int main()
 {
-	runProg(1000);
-	exit(0);
+	vector<string> lines = readFile("aoc.txt");
 
-	//Change numbers in this and run it manually to get which link is actually the correct one
+	vector<vector<int64_t>> sizes;
+	vector<vector<int>> coords;
 
-	//cout << runProg(6500) << endl;
-	//exit(0);
-
-	for (int i = 6300; i < 6310; i++)
+	for (auto i : lines)
 	{
-		int j = runProg(i);
-		if (j == 1000)
+		coords.push_back(splitStringI(i, ','));
+	}
+	for (int i = 0; i < lines.size(); i++)
+	{
+		for (int j = i + 1; j < lines.size(); j++)
 		{
-			cout << i << endl;
-			exit(0);
+			int64_t x = calcDist(coords[i], coords[j]);
+			sizes.push_back({ x, i, j });
 		}
 	}
+	sort(sizes.begin(), sizes.end(), [](const std::vector<int64_t>& a, const std::vector<int64_t>& b) {return a[0] < b[0]; });
+
+	int minLinks = 1000;
+	int maxLinks = 10000;
+	cout << "Part1: " << makeLinks(sizes, coords, minLinks) << endl;
+
+	while ((minLinks != maxLinks) && (minLinks != maxLinks-1))
+	{
+		int midpoint = (maxLinks + minLinks) / 2;
+
+		int maxSize = makeLinks(sizes, coords, midpoint);
+		if (maxSize == coords.size())
+		{
+			maxLinks = midpoint;
+		}
+		else
+		{
+			minLinks = midpoint;
+		}
+	}
+	int64_t part2;
+	int first = sizes[maxLinks - 1][1];
+	int second = sizes[maxLinks - 1][2];
+	part2 = coords[first][0] * coords[second][0];
+	cout << "Part2: " << part2 << endl;
+
 }
